@@ -33,6 +33,7 @@ app.controller('PostsCtrl', [
 
 //factory 'posts' similar to directive -- it makes all posts through postFunction()
 app.factory('posts', [
+    '$http',
     postFunction
     ]);
 
@@ -44,9 +45,14 @@ app.config([
 ]);
 
 //This function is called to store a created post in an array and returns the array
-function postFunction() {
+function postFunction($http) {
     var o = {
         posts: []
+    };
+    o.getAll = function () {
+        return $http.get('/posts').success(function(data){
+            angular.copy(data, o.posts);
+        })
     };
     return o;
 }
@@ -90,7 +96,12 @@ function routerFunction($stateProvider, $urlRouterProvider) {
         .state('home', {
             url: '/home',
             templateUrl: '/home.html',
-            controller: 'MainCtrl'
+            controller: 'MainCtrl',
+            resolve: {
+                postPromise: ['posts', function (posts) {
+                    return posts.getAll();
+                }]
+            }
         })
         .state('posts', {
             url: '/posts/{id}',
